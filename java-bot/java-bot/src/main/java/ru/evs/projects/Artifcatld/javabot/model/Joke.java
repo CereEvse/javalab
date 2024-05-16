@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
-
+import java.util.List;
 @Getter
 @Setter
 @ToString
@@ -15,8 +15,9 @@ import java.util.Date;
 public class Joke {
 
     @Id
+    @SequenceGenerator(name = "joke_seq", sequenceName = "joke_sequence", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "joke_seq")
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "text")
@@ -27,9 +28,14 @@ public class Joke {
 
     @Column(name = "updatedAt")
     private Date updatedAt;
-    public Joke(String text, Date createdAt){
+
+    public Joke(String text, Date createdAt) {
         this.text = text;
         this.createdAt = createdAt;
     }
 
+    @OneToMany(mappedBy = "jokeId", cascade = CascadeType.ALL)
+    private List<JokeVisitor> jokeVisitor;
 }
+
+

@@ -1,33 +1,45 @@
 package ru.evs.projects.Artifcatld.javabot.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.evs.projects.Artifcatld.javabot.model.Joke;
+import ru.evs.projects.Artifcatld.javabot.model.JokeVisitor;
 import ru.evs.projects.Artifcatld.javabot.repository.JokesRepository;
 
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class JokeServiceImpl implements JokeService {
 
-    private JokesRepository jokesRepository;
+    private final JokesRepository jokesRepository;
 
     @Override
-    public void registerJoke(Joke joke){
+    public void registerJoke(Joke joke) {
         jokesRepository.save(joke);
     }
 
     @Override
-    public List<Joke> getAllJokes(){
+    public List<Joke> getAllJokes() {
         return jokesRepository.findAll();
     }
 
     @Override
     public Optional<Joke> getJokeById(Long id) {
-        return jokesRepository.findById(id);
+        Optional<Joke> jokeOptional = jokesRepository.findById(id);
+        jokeOptional.ifPresent(joke -> {
+            joke.getJokeVisitor().add(new JokeVisitor(null, joke, new Date()));
+            jokesRepository.saveAndFlush(joke);
+        });
+        return jokeOptional;
     }
 
     @Override
@@ -52,12 +64,20 @@ public class JokeServiceImpl implements JokeService {
 
     @Override
     public Joke getRandomJoke() {
-        List<Joke> jokes = jokesRepository.findAll();
-        if (jokes.isEmpty()) {
-            return null;
-        }
-        Random random = new Random();
-        int randomIndex = random.nextInt(jokes.size());
-        return jokes.get(randomIndex);
+        return jokesRepository.findRandomJoke(); // Используем метод из репозитория
+    }
+
+
+
+    // Метод для page всех шуток
+    @Override
+    public Page<Joke> getJokes(Pageable pageable) {
+        return jokesRepository.findAll(pageable);
+    }
+
+    // Метод для page топ-5 шуток по количеству посетителей
+    @Override
+    public Page<Joke> getTopJokes(Pageable pageable) {
+        return jokesRepository.findByOrderByJokeVisitorDesc(pageable);
     }
 }

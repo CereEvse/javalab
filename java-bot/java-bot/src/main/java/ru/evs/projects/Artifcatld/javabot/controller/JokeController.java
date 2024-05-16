@@ -1,6 +1,8 @@
 package ru.evs.projects.Artifcatld.javabot.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.evs.projects.Artifcatld.javabot.model.Joke;
@@ -15,8 +17,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JokeController {
 
-    private JokeService jokeService;
-    private TelegramBotService telegramBotService; // Внедряем TelegramBotService
+    private final JokeService jokeService;
+    private final TelegramBotService telegramBotService; // Внедряем TelegramBotService
 
     //POST /jokes - создание новой шутки
     @PostMapping
@@ -28,10 +30,9 @@ public class JokeController {
 
     //GET /jokes - выдача всех шуток
     @GetMapping
-    ResponseEntity<List<Joke>> getJokes(){
-        return ResponseEntity.ok(jokeService.getAllJokes());
+    public ResponseEntity<Page<Joke>> getJokes(Pageable pageable) {
+        return ResponseEntity.ok(jokeService.getJokes(pageable));
     }
-
 
     //GET /jokes/id - выдача шутки с определенным id
     @GetMapping("/{id}")
@@ -57,5 +58,10 @@ public class JokeController {
         existingJoke.setText(updatedJoke.getText());
         jokeService.updateJoke(existingJoke);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<Page<Joke>> getTopJokes(Pageable pageable) {
+        return ResponseEntity.ok(jokeService.getTopJokes(pageable));
     }
 }
